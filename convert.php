@@ -224,11 +224,11 @@ foreach ($bots as $b) {
 // Next NickCore
 $emails = array();
 foreach ($nicks as $n) {
-	$password = md5($n['nick'].time().$aver,true);
+	$password = $n['nick'].time().$aver;
 	$emails[] = array("nick"=>$n['nick'],"password"=>$password,"email"=>$n['email']);
 	$output[] = "OBJECT NickCore";
 	$output[] = "DATA display {$n['nick']}";
-	$output[] = "DATA pass md5:".base64_encode(md5($password));
+	$output[] = "DATA pass md5:".base64_encode(md5($password,true));
 	$output[] = "DATA email {$n['email']}";
 	$output[] = "DATA language";
 	if (isset($n['access'])) {
@@ -390,7 +390,7 @@ if (count($emails) > 0) {
 	foreach ($emails as $email) {
 		$em[] = "{$email['email']} {$email['nick']} {$email['password']}";
 	}
-	file_put_contents("anope_emails.txt",implode("\n",$em));
+	file_put_contents("anope_list.txt",implode("\n",$em));
 	echo "\nA list of users and their new passwords has been written to 'anope_emails.txt'\n";
 	echo "You can use this to give them their new passwords.\n";
 }
