@@ -24,7 +24,7 @@ function email($data) {
 	$html .= "Hi {$data['nick']},<p/>Recently our network has migrated services package from Atheme to Anope 1.9<br/>";
 	$html .= "Due to Password Encryption Methods that differ between packages we've had to reset all passwords.<br/>";
 	$html .= "Don't worry though, all other data remains unchanged.<br/>";
-	$html .= "The new password for the Nickserv account '{$data['network']}' is now:<p/>";
+	$html .= "The new password for the Nickserv account '{$data['nick']}' is now:<p/>";
 	$html .= "<h1><strong>{$data['password']}</strong></h1>";
 	$html .= "You can now log into NickServ via '/ns identify {$data['password']}' then reset your password<br/>";
 	$html .= "via '/ns set password newpasswordhere', if you require support ask in our Support channel.";
