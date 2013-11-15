@@ -120,8 +120,6 @@ foreach ($atheme_db as $line) {
 					$xdata = array();
 					if ($extra[1] == "botserv" && $extra[2] == "bot-assigned") {
 						$xdata['bot'] = $data[3];
-					} else if ($extra[1] == "channelts") {
-						$xdata['used'] = $data[3];
 					}
 					if (isset($chans[$data[1]])) {
 						$chans[$data[1]] = array_merge($chans[$data[1]],$xdata);
@@ -346,7 +344,7 @@ foreach ($access as $a) {
 	} else if (preg_match("/h/",$a['modes'])) {
 		// Half-Op!
 		$level = 4;
-	} else if (preg_match("/v/",$a['modes'])) {
+	} else if (preg_match("/v/i",$a['modes'])) {
 		// Voice!
 		$level = 3;
 	} else {
