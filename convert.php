@@ -1,6 +1,8 @@
 <?php
 /* Atheme to Anope Database Convertor
  * Created by Thomas Edwards (C) 2013
+ * Bug Fixes and Advice from Cronus and Adam
+ * Tested by Myself and Cronus
  * Created for Anope IRC Services
  * 
  * Created around Atheme 7.0.2
@@ -41,6 +43,17 @@ if ($objects == 0) {
 	die("There are zero recognised database objects!\n");
 }
 echo "Found {$objects} recognised data objects!\n";
+
+// Functions for certain things.
+function gen($len = 10) {
+	$chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012456789";
+	$pass = "";
+	for ($i = 0; $i < $len; $i++) {
+		$str = str_split($chars);
+		$pass .= $str[array_rand($str)];
+	}
+	return $pass;
+}
 
 echo "Loaded 'atheme.db' with ".count($atheme_db)." lines.\n";
 
@@ -94,14 +107,15 @@ foreach ($atheme_db as $line) {
 				$adat['owner'] = $data[1];
 				$adat['alias'] = $data[2];
 				$adat['reg_stamp'] = $data[3];
-				$adat['seen_stamp'] = $data[2];
+				$adat['seen_stamp'] = $data[4];
 				$alias[] = $adat;
 				
 			} else if ($data[0] == "MC") {
 				// Channel Create.
 				$cdat = array();
 				$cdat['name'] = $data[1];
-				$cdat['create'] = $data[3]; // Create Stamp?
+				$cdat['create'] = $data[2]; // Create Stamp?
+				$cdat['used'] = $data[3];
 				$chans[$data[1]] = $cdat;
 			} else if ($data[0] == "CA") {
 				// Channel access. Tricky one.
@@ -165,6 +179,7 @@ echo "\nConverting to Anope 1.9.* Format. Output shall be 'anope.db'\n";
 $output = array();
 // OhGod. Default Minimal Data. REQUIRED
 // If Anope doesn't detect this data the DB gets straight out ejected.
+/*
 $output[] = "OBJECT BotInfo";
 $output[] = "DATA nick BotServ";
 $output[] = "DATA user services";
@@ -204,6 +219,7 @@ $output[] = "OBJECT Stats";
 $output[] = "DATA maxusercnt 9";
 $output[] = "DATA maxusertime 1384149465";
 $output[] = "END";
+*/
 
 // Lets try and process this similar to how Anopes Databases look..
 
@@ -222,11 +238,11 @@ foreach ($bots as $b) {
 // Next NickCore
 $emails = array();
 foreach ($nicks as $n) {
-	$password = $n['nick'].time().$aver;
+	$password = gen();
 	$emails[] = array("nick"=>$n['nick'],"password"=>$password,"email"=>$n['email']);
 	$output[] = "OBJECT NickCore";
 	$output[] = "DATA display {$n['nick']}";
-	$output[] = "DATA pass md5:".base64_encode(md5($password,true));
+	$output[] = "DATA pass md5:".md5($password);
 	$output[] = "DATA email {$n['email']}";
 	$output[] = "DATA language";
 	if (isset($n['access'])) {
@@ -305,7 +321,9 @@ foreach ($chans as $c) {
 	$output[] = "DATA founder {$founder}"; // N/A
 	$output[] = "DATA description";
 	$output[] = "DATA time_registered {$c['create']}";
-	$output[] = "DATA last_used {$c['used']}";
+	if (isset($c['used'])) {
+		$output[] = "DATA last_used {$c['used']}";
+	}
 	$output[] = "DATA last_topic";
 	$output[] = "DATA last_topic_setter ChanServ";
 	$output[] = "DATA last_topic_time 0";
@@ -332,7 +350,7 @@ foreach ($access as $a) {
 	// Anope configuration
 	
 	// This is the access level. We'll go with anopes basics.
-	if (preg_match("/(q|F)/",$a['modes'])) {
+	if (preg_match("/(q)/",$a['modes'])) {
 		// Owner/Founder!
 		$level = 9999;
 	} else if (preg_match("/a/",$a['modes'])) {
@@ -370,6 +388,7 @@ foreach ($memos as $m) {
 	$output[] = "DATA time {$m['stamp']}";
 	$output[] = "DATA sender {$m['from']}";
 	$output[] = "DATA text {$m['msg']}";
+	// Flip the status. Atheme checks if its read, Anope checks if its unread
 	if ($m['read'] == "0") {
 		$output[] = "DATA unread 1";
 	} else {
