@@ -46,7 +46,7 @@ echo "Found {$objects} recognised data objects!\n";
 
 // Functions for certain things.
 function gen($len = 10) {
-	$chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012456789";
+	$chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 	$pass = "";
 	for ($i = 0; $i < $len; $i++) {
 		$str = str_split($chars);
@@ -67,6 +67,7 @@ $nicks = array();
 $access = array();
 $memos = array();
 $alias = array();
+$founders = array();
 
 // Lets read the data.
 foreach ($atheme_db as $line) {
@@ -125,7 +126,16 @@ foreach ($atheme_db as $line) {
 				$adat['modes'] = $data[3];
 				$adat['stamp'] = $data[4];
 				$adat['setter'] = $data[5]; // Person who added this.
-				$access[] = $adat;
+				if (pregmatch("/F/",$data[2])) {
+					if (!isset($founders[$data[1]])) {
+						$founders[$data[1]][] = $data[2];
+					} else {
+						// We already have our founder.
+						$access[] = $adat;
+					}
+				} else {
+					$access[] = $adat;
+				}
 			} else if ($data[0] == "MDC") {
 				// Extra channel info.
 				$extra = explode(":",$data[2]);
@@ -301,24 +311,7 @@ foreach ($chans as $c) {
 	$output[] = "OBJECT ChannelInfo";
 	$output[] = "DATA name {$c['name']}";
 	
-	// Cycle the access list for the first entry..
-	// A dirty hack at that.
-	$founder = false;
-	$x = 0;
-	while (!$founder) {
-		if ($x == count($access)-1) {
-			$founder = true;
-		}
-		
-		if ($access[$x]['channel'] == $c['name']) {
-			if (preg_match("/F/",$access[$x]['modes'])) {
-				$founder = $access[$x]['nick'];
-			}
-		}
-		$x++;
-	}
-	
-	$output[] = "DATA founder {$founder}"; // N/A
+	$output[] = "DATA founder {$founders[$c['name']][0]}"; // Nailed it.
 	$output[] = "DATA description";
 	$output[] = "DATA time_registered {$c['create']}";
 	if (isset($c['used'])) {
