@@ -126,7 +126,7 @@ foreach ($atheme_db as $line) {
 				$adat['modes'] = $data[3];
 				$adat['stamp'] = $data[4];
 				$adat['setter'] = $data[5]; // Person who added this.
-				if (pregmatch("/F/",$data[2])) {
+				if (preg_match("/F/",$data[2])) {
 					if (!isset($founders[$data[1]])) {
 						$founders[$data[1]][] = $data[2];
 					} else {
