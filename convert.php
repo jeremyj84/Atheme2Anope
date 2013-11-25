@@ -144,6 +144,14 @@ foreach ($atheme_db as $line) {
 					$xdata = array();
 					if ($extra[1] == "botserv" && $extra[2] == "bot-assigned") {
 						$xdata['bot'] = $data[3];
+					} else if ($extra[1] == "topic") {
+						if ($extra[2] == "setter") {
+							$xdata['topic_setter'] = $data[3];
+						} else if ($extra[2] == "text") {
+							$xdata['topic_text'] = implode(" ",array_slice($data,2));
+						} else if ($extra[2] == "ts") {
+							$xdata['topic_ts'] = $data[3];
+						}
 					}
 					if (isset($chans[$data[1]])) {
 						$chans[$data[1]] = array_merge($chans[$data[1]],$xdata);
@@ -187,51 +195,8 @@ echo "\t\t".count($memos)." Memos\n";
 echo "\nConverting to Anope 1.9.* Format. Output shall be 'anope.db'\n";
 
 $output = array();
-// OhGod. Default Minimal Data. REQUIRED
-// If Anope doesn't detect this data the DB gets straight out ejected.
-/*
-$output[] = "OBJECT BotInfo";
-$output[] = "DATA nick BotServ";
-$output[] = "DATA user services";
-$output[] = "DATA oper_only 0";
-$output[] = "END";
-$output[] = "OBJECT BotInfo";
-$output[] = "DATA nick ChanServ";
-$output[] = "DATA user services";
-$output[] = "DATA oper_only 0";
-$output[] = "END";
-$output[] = "OBJECT BotInfo";
-$output[] = "DATA nick Global";
-$output[] = "DATA user services";
-$output[] = "DATA oper_only 0";
-$output[] = "END";
-$output[] = "OBJECT BotInfo";
-$output[] = "DATA nick HostServ";
-$output[] = "DATA user services";
-$output[] = "DATA oper_only 0";
-$output[] = "END";
-$output[] = "OBJECT BotInfo";
-$output[] = "DATA nick MemoServ";
-$output[] = "DATA user services";
-$output[] = "DATA oper_only 0";
-$output[] = "END";
-$output[] = "OBJECT BotInfo";
-$output[] = "DATA nick NickServ";
-$output[] = "DATA user services";
-$output[] = "DATA oper_only 0";
-$output[] = "END";
-$output[] = "OBJECT BotInfo";
-$output[] = "DATA nick OperServ";
-$output[] = "DATA user services";
-$output[] = "DATA oper_only 0";
-$output[] = "END";
-$output[] = "OBJECT Stats";
-$output[] = "DATA maxusercnt 9";
-$output[] = "DATA maxusertime 1384149465";
-$output[] = "END";
-*/
 
-// Lets try and process this similar to how Anopes Databases look..
+// Now we add data to the "output stack"... Fancy words.
 
 // First BotServ!
 foreach ($bots as $b) {
@@ -317,9 +282,15 @@ foreach ($chans as $c) {
 	if (isset($c['used'])) {
 		$output[] = "DATA last_used {$c['used']}";
 	}
-	$output[] = "DATA last_topic";
-	$output[] = "DATA last_topic_setter ChanServ";
-	$output[] = "DATA last_topic_time 0";
+	if (isset($c['topic_text'])) {
+		$output[] = "DATA last_topic {$c['topic_text']}";
+	}
+	if (isset($c['topic_setter'])) {
+		$output[] = "DATA last_topic_setter {$c['topic_setter']}";
+	}
+	if (isset($c['topic_ts'])) {
+		$output[] = "DATA last_topic_time {$c['topic_ts']}";
+	}
 	$output[] = "DATA bantype 2";
 	$output[] = "DATA levels ACCESS_CHANGE 10 ACCESS_LIST 3 AKICK 10 ASSIGN 10001 AUTOHALFOP 4 AUTOOP 5 AUTOOWNER 9999 AUTOPROTECT 10 AUTOVOICE 3 BADWORDS 10 BAN 4 FANTASIA 3 FOUNDER 10001 GETKEY 5 GREET 5 HALFOP 5 HALFOPME 4 INFO 9999 INVITE 5 KICK 4 MEMO 10 MODE 9999 NOKICK 1 OP 5 OPME 5 OWNER 10001 OWNERME 9999 PROTECT 9999 PROTECTME 10 SAY 5 SET 9999 SIGNKICK 9999 TOPIC 5 UNBAN 4 VOICE 4 VOICEME 3"; 
 	if (isset($c['bot'])) {
