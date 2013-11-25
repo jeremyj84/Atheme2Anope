@@ -57,6 +57,8 @@ function gen($len = 10) {
 
 echo "Loaded 'atheme.db' with ".count($atheme_db)." lines.\n";
 
+$errors = array();
+
 // Lets convert.
 echo "Reading Database...\n";
 
@@ -68,6 +70,8 @@ $access = array();
 $memos = array();
 $alias = array();
 $founders = array();
+
+$debug = 0;
 
 // Lets read the data.
 foreach ($atheme_db as $line) {
@@ -126,11 +130,13 @@ foreach ($atheme_db as $line) {
 				$adat['modes'] = $data[3];
 				$adat['stamp'] = $data[4];
 				$adat['setter'] = $data[5]; // Person who added this.
-				if (preg_match("/F/",$data[2])) {
+				if (preg_match("/F/",$data[3])) {
 					if (!isset($founders[$data[1]])) {
-						$founders[$data[1]][] = $data[2];
+						$debug++;
+						$founders[$data[1]][] = $data[3];
 					} else {
 						// We already have our founder.
+						$debug++;
 						$access[] = $adat;
 					}
 				} else {
@@ -276,7 +282,11 @@ foreach ($chans as $c) {
 	$output[] = "OBJECT ChannelInfo";
 	$output[] = "DATA name {$c['name']}";
 	
-	$output[] = "DATA founder {$founders[$c['name']][0]}"; // Nailed it.
+	if (isset($founders[$c['name']][0])) {
+		$output[] = "DATA founder {$founders[$c['name']][0]}"; // Nailed it.
+	} else {
+		$errors[] = "Unable to find the founder for {$c['name']}!";
+	}
 	$output[] = "DATA description";
 	$output[] = "DATA time_registered {$c['create']}";
 	if (isset($c['used'])) {
@@ -379,4 +389,19 @@ $s = time() - $start;
 echo "\n\tDone! Conversion took {$s} seconds!\n";
 $count = count($bots)+count($chans)+count($nicks)+count($access)+count($memos)+count($alias);
 echo "I used {$count} objects out of the detected {$objects}!\n\n";
+echo "I also encountered ".count($errors)." errors.\n";
+foreach ($errors as $err) {
+	echo "\t{$err}\n";
+}
+if (count($chans) !== count($founders)) {
+	$c = json_encode($chans);
+	$f = json_encode($founders);
+	$out = array();
+	$out[] = "CHANNELS:\n";
+	$out[] = base64_encode($c);
+	$out[] = "\nFOUNDERS:\n";
+	$out[] = base64_encode($f);
+	file_put_contents("error_dump_".time().".txt",implode($out));
+	echo "There is a founder (".count($founders).") vs channel (".count($chans).") mismatch! Please report error_dump_".time().".txt to tmfksoft@gmail.com\n";
+}
 ?>
