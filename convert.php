@@ -227,11 +227,11 @@ foreach ($bots as $b) {
 // Next NickCore
 $emails = array();
 foreach ($nicks as $n) {
-	$password = gen();
-	$emails[] = array("nick"=>$n['nick'],"password"=>$password,"email"=>$n['email']);
+	//$password = gen();
+	//$emails[] = array("nick"=>$n['nick'],"password"=>$password,"email"=>$n['email']);
 	$output[] = "OBJECT NickCore";
 	$output[] = "DATA display {$n['nick']}";
-	$output[] = "DATA pass md5:".md5($password);
+	$output[] = "DATA pass posix:{$n['pass']}";
 	$output[] = "DATA email {$n['email']}";
 	$output[] = "DATA language";
 	if (isset($n['access'])) {
