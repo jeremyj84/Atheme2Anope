@@ -22,7 +22,7 @@
 
 $ircd = 'inspircd';
 echo "Atheme (7.0.2) to Anope Database Convertor..\n";
-echo "Version 0.1, All passwords will be reset.\n\n";
+echo "Version 0.2.\n\n";
 sleep(1);
 $start = time();
 echo "Loading Atheme Database. Make sure it is named 'atheme.db'!\n";
@@ -79,10 +79,12 @@ $debug = 0;
 foreach ($atheme_db as $line) {
 	if ($line != "") {
 		$data = explode(chr(32),$line);
-		if (preg_match("/(MU|MDU|MC|MN|CA|MDC|BOT|DBV|ME)/i",$data[0])) {
+		if (preg_match("/^(MU|MDU|MC|MN|CA|MDC|BOT|DBV|ME|MDEP)/i",$data[0])) {
 			if ($data[0] == "DBV") {
 				echo "Atheme Database v{$data[1]}\n";
 				$aver = $data[1];
+			} else if ($data[0] == "MDEP") {
+				// Attempts to auto detect ircd and crypto
 			} else if ($data[0] == "MU") {
 				// User Registration
 				$udat = array();
@@ -162,7 +164,7 @@ foreach ($atheme_db as $line) {
 						if ($extra[2] == "setter") {
 							$xdata['topic_setter'] = $data[3];
 						} else if ($extra[2] == "text") {
-							$xdata['topic_text'] = implode(" ",array_slice($data,2));
+							$xdata['topic_text'] = implode(" ",array_slice($data,3));
 						} else if ($extra[2] == "ts") {
 							$xdata['topic_ts'] = $data[3];
 						}
